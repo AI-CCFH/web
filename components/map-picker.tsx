@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -14,138 +14,148 @@ interface MapPickerProps {
 export function MapPicker({ latitude, longitude, onLocationChange, className }: MapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [map, setMap] = useState<any>(null)
-  const [marker, setMarker] = useState<any>(null)
 
-  // Load Leaflet dynamically on client side
   useEffect(() => {
-    // Only run this in the browser
     if (typeof window === "undefined") return
 
-    // Load Leaflet CSS
-    const linkEl = document.createElement("link")
-    linkEl.rel = "stylesheet"
-    linkEl.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    linkEl.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    linkEl.crossOrigin = ""
-    document.head.appendChild(linkEl)
+    const leafletCSS = document.createElement("link")
+    leafletCSS.rel = "stylesheet"
+    leafletCSS.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    document.head.appendChild(leafletCSS)
 
-    // Load Leaflet JS
-    const scriptEl = document.createElement("script")
-    scriptEl.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    scriptEl.integrity = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    scriptEl.crossOrigin = ""
-    scriptEl.onload = () => setMapLoaded(true)
-    document.head.appendChild(scriptEl)
+    const leafletJS = document.createElement("script")
+    leafletJS.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    leafletJS.onload = () => setMapLoaded(true)
+    document.head.appendChild(leafletJS)
+
+    const geocoderJS = document.createElement("script")
+    geocoderJS.src = "https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"
+    document.head.appendChild(geocoderJS)
+
+    const geocoderCSS = document.createElement("link")
+    geocoderCSS.rel = "stylesheet"
+    geocoderCSS.href = "https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+    document.head.appendChild(geocoderCSS)
 
     return () => {
-      document.head.removeChild(linkEl)
-      document.head.removeChild(scriptEl)
+      document.head.removeChild(leafletCSS)
+      document.head.removeChild(leafletJS)
+      document.head.removeChild(geocoderJS)
+      document.head.removeChild(geocoderCSS)
     }
   }, [])
 
-  // Initialize map once Leaflet is loaded
   useEffect(() => {
-    if (!mapLoaded || !mapRef.current) return
+    if (!mapLoaded || !mapRef.current || !(window as any).L) return
 
     const L = (window as any).L
-    if (!L) return
+    const map = L.map(mapRef.current).setView([latitude, longitude], 15)
 
-    // Initialize map with error handling
-    try {
-      const newMap = L.map(mapRef.current).setView([latitude, longitude], 13)
+    // Base layers
+    const OSM = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    })
 
-      // Add tile layer (OpenStreetMap)
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(newMap)
+    const google = L.tileLayer("https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}", {
+      maxZoom: 20,
+      subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      attribution: "&copy; Google",
+    })
 
-      // Add marker with error handling
-      const newMarker = L.marker([latitude, longitude], {
-        draggable: true,
-      }).addTo(newMap)
+    OSM.addTo(map)
+    google.addTo(map)
 
-      // Handle marker drag with error handling
-      newMarker.on("dragend", (e: any) => {
-        try {
-          if (e && e.target) {
-            const position = e.target.getLatLng()
-            if (position && typeof position.lat === "number" && typeof position.lng === "number") {
-              onLocationChange(position.lat, position.lng)
-            }
-          }
-        } catch (error) {
-          console.error("Error handling marker drag:", error)
-        }
-      })
+    // Your Location
+    const myIcon = L.icon({
+      iconUrl: "../static/images/adventurer_pin_new.png",
+      iconSize: [50, 50],
+    })
 
-      // Handle map click with error handling
-      newMap.on("click", (e: any) => {
-        try {
-          if (e && e.latlng) {
-            const { lat, lng } = e.latlng
-            if (typeof lat === "number" && typeof lng === "number") {
-              newMarker.setLatLng([lat, lng])
-              onLocationChange(lat, lng)
-            }
-          }
-        } catch (error) {
-          console.error("Error handling map click:", error)
-        }
-      })
+    // Warehouse Location
+    const Warehouse = L.icon({
+      iconUrl: "../static/images/quest.png",
+      iconSize: [50, 50],
+    })
+    
 
-      // Add zoom end event to handle rapid zooming
-      newMap.on("zoomend", () => {
-        try {
-          // This empty handler helps stabilize the map during rapid zoom
-        } catch (error) {
-          console.error("Error during zoom:", error)
-        }
-      })
+    // Markers
+    const myLocation = L.marker([latitude, longitude], { icon: myIcon }).addTo(map)
+    myLocation.bindPopup(
+      "<b style='color: blue'>Your Location!</b><br><a style='color: black'>This is where you are</a>"
+    ).openPopup()
 
-      setMap(newMap)
-      setMarker(newMarker)
+    const Warehouse_marker = L.marker([10.7683, 106.6758], { icon: Warehouse })
 
-      return () => {
-        try {
-          if (newMap) {
-            newMap.remove()
-          }
-        } catch (error) {
-          console.error("Error removing map:", error)
-        }
-      }
-    } catch (error) {
-      console.error("Error initializing map:", error)
-      return () => {}
+    // Layers control
+    const baseMaps = {
+      "<span style='color: green; font-size: 16px;'>OSM</span>": OSM,
+      "<span style='color: blue; font-size: 15px;'>Google</span>": google,
     }
-  }, [mapLoaded, mapRef, latitude, longitude, onLocationChange])
 
-  // Update marker position when lat/lng props change
-  useEffect(() => {
-    if (!map || !marker) return
-
-    try {
-      // Update marker position
-      marker.setLatLng([latitude, longitude])
-
-      // Center map on marker with a slight delay to prevent race conditions
-      const timer = setTimeout(() => {
-        if (map && !map._animatingZoom) {
-          // Only update if not currently animating
-          map.setView([latitude, longitude], map.getZoom())
-        }
-      }, 10)
-
-      return () => clearTimeout(timer)
-    } catch (error) {
-      console.error("Error updating marker position:", error)
+    const overlayMaps = {
+      "<span style='color: red; font-size: 16px;'>Location</span>": myLocation,
+      "<span style='color: red; font-size: 16px;'>Ware house</span>": Warehouse_marker ,
     }
-  }, [latitude, longitude, map, marker])
+
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map)
+
+    // Map click popup
+    const popup = L.popup()
+    map.on("click", (e: any) => {
+      const { lat, lng } = e.latlng
+      popup
+        .setLatLng(e.latlng)
+        .setContent(
+          `<h1 style="color: green"; font-size:20px;>Clicked Location</h1>
+          Latitude: ${lat}<br>
+          Longitude: ${lng}<br>
+          <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank">Open in Google Maps</a>`
+        )
+        .openOn(map)
+    
+      // Optional: notify parent component of new lat/lng
+      onLocationChange(lat, lng)
+    })
+    
+    
+
+    // Geocoder
+    if (L.Control && L.Control.Geocoder) {
+      L.Control.geocoder().addTo(map)
+    }
+
+    // Geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude: lat, longitude: lng } = position.coords
+          myLocation.setLatLng([lat, lng])
+          map.setView([lat, lng], map.getZoom())
+          console.log(`Your coordinates are: lat: ${lat}, long: ${lng}`)
+        },
+        (error) => {
+          console.error("Geolocation error: ", error)
+          if (error.code === error.PERMISSION_DENIED) {
+            alert("Geolocation permission denied. Please allow access to your location.")
+          } else if (error.code === error.TIMEOUT) {
+            alert("Geolocation request timed out. Please try again.")
+          } else {
+            alert("An error occurred while retrieving your location.")
+          }
+        }
+      )
+    } else {
+      console.log("Your browser doesn't support location feature!")
+    }
+
+    return () => {
+      map.remove()
+    }
+  }, [mapLoaded])
 
   return (
-    <Card className={cn("w-full h-[400px] overflow-hidden", className)}>
+    <Card className={cn("w-full h-[500px] overflow-hidden", className)}>
       <div ref={mapRef} className="w-full h-full" />
     </Card>
   )

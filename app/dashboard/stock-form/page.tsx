@@ -126,124 +126,140 @@ export default function StockFormPage() {
         <h1 className="text-2xl font-bold tracking-tight">Stock Management Form</h1>
         <p className="text-muted-foreground">Use this form to add or update stock information.</p>
 
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle>Stock Details</CardTitle>
-            <CardDescription>Enter the details of the stock item. Fields marked with * are required.</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Item Name *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter item name"
-                    required
-                  />
-                </div>
+        <div className="flex flex-col lg:flex-row gap-4">
+          <Card className="max-w-2xl flex-grow">
+            <CardHeader>
+              <CardTitle>Stock Details</CardTitle>
+              <CardDescription>Enter the details of the stock item. Fields marked with * are required.</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name">Item Name *</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter item name"
+                required
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity *</Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    value={formData.quantity}
-                    onChange={handleChange}
-                    placeholder="Enter quantity"
-                    required
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity *</Label>
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                value={formData.quantity}
+                onChange={handleChange}
+                placeholder="Enter quantity"
+                required
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="kg_per_quantity">Weight per Unit (kg) *</Label>
-                  <Input
-                    id="kg_per_quantity"
-                    name="kg_per_quantity"
-                    type="number"
-                    step="0.01"
-                    value={formData.kg_per_quantity}
-                    onChange={handleChange}
-                    placeholder="Enter weight per unit"
-                    required
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="kg_per_quantity">Weight per Unit (kg) *</Label>
+              <Input
+                id="kg_per_quantity"
+                name="kg_per_quantity"
+                type="number"
+                step="0.01"
+                value={formData.kg_per_quantity}
+                onChange={handleChange}
+                placeholder="Enter weight per unit"
+                required
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="urgency">Urgency Level</Label>
-                  <Select value={formData.urgency} onValueChange={(value) => handleSelectChange("urgency", value)}>
-                    <SelectTrigger id="urgency">
-                      <SelectValue placeholder="Select urgency level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="urgency">Urgency Level</Label>
+              <Select value={formData.urgency} onValueChange={(value) => handleSelectChange("urgency", value)}>
+                <SelectTrigger id="urgency">
+            <SelectValue placeholder="Select urgency level" />
+                </SelectTrigger>
+                <SelectContent>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={() => setFormData(initialFormState)}>
+            Reset Form
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+              </CardFooter>
+            </form>
+          </Card>
 
-                <div className="space-y-2">
-                  <Label htmlFor="current_location">Current Location</Label>
-                  <Input
-                    id="current_location"
-                    name="current_location"
-                    value={formData.current_location}
-                    onChange={handleChange}
-                    placeholder="Enter current location"
-                  />
-                </div>
+          <div className="lg:w-1/3">
+            <Card className="sticky top-4">
+              <CardHeader>
+          <CardTitle>Tips</CardTitle>
+          <CardDescription>Helpful tips for filling out the form</CardDescription>
+              </CardHeader>
+              <CardContent>
+          <ul className="list-disc pl-4 space-y-2">
+            <li>Ensure all required fields are filled out.</li>
+            <li>Use accurate measurements for weight and quantity.</li>
+            <li>Select the appropriate urgency level for your stock.</li>
+          </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="from_location">Origin Location</Label>
-                  <Input
-                    id="from_location"
-                    name="from_location"
-                    value={formData.from_location}
-                    onChange={handleChange}
-                    placeholder="Enter origin location"
-                  />
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Stock Summary</CardTitle>
+              <CardDescription>Manage your stock items below</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <table className="table-auto w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 px-4 py-2 text-left">Item Name</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Quantity</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Weight (kg)</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Urgency</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2">{formData.name}</td>
+              <td className="border border-gray-300 px-4 py-2">{formData.quantity || "N/A"}</td>
+              <td className="border border-gray-300 px-4 py-2">{formData.kg_per_quantity || "N/A"}</td>
+              <td className="border border-gray-300 px-4 py-2">{formData.urgency || "N/A"}</td>
+              <td className="border border-gray-300 px-4 py-2">
+                <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              Update
+            </Button>
+            <Button variant="destructive" size="sm">
+              Delete
+            </Button>
+            <Button variant="success" size="sm">
+              Mark as Done
+            </Button>
                 </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="to_location">Destination Location</Label>
-                  <Input
-                    id="to_location"
-                    name="to_location"
-                    value={formData.to_location}
-                    onChange={handleChange}
-                    placeholder="Enter destination location"
-                  />
-                </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="notes">Additional Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Enter any additional information"
-                    rows={4}
-                  />
-                </div>
-              </div>
+              </td>
+            </tr>
+          </tbody>
+              </table>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setFormData(initialFormState)}>
-                Reset Form
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   )

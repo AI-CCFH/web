@@ -9,15 +9,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { shipments, type Shipment } from "@/lib/mock-data"
 import { Search, Filter, Download, CheckCircle, Clock } from "lucide-react"
+import { getAllShipments, type Shipment } from "@/lib/api/services/shipment-service"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function DeliveriesPage() {
   // Initialize all state hooks at the top level
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("upcoming")
+  const [shipments, setShipments] = useState<Shipment[]>([])
   const [filteredDeliveries, setFilteredDeliveries] = useState<Shipment[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch shipments data
+  useEffect(() => {
+    const fetchShipments = async () => {
+      try {
+        const response = await getAllShipments()
+        if (response.success && response.data) {
+          setShipments(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching shipments:", error)
+        setLoading(false)
+      }
+    }
+    fetchShipments()
+  }, [])
 
   // Use useEffect to handle filtering logic
   useEffect(() => {
@@ -47,7 +66,7 @@ export default function DeliveriesPage() {
     }
 
     setFilteredDeliveries(filtered)
-  }, [activeTab, searchTerm])
+  }, [activeTab, searchTerm, shipments])
 
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

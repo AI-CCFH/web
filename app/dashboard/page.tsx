@@ -6,20 +6,159 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Package, Truck, Users, Warehouse, AlertTriangle } from "lucide-react"
 import { useAuth } from "@/lib/auth"
-import { getRecentActivities } from "@/lib/mock-data"
 import { formatDistanceToNow } from "date-fns"
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts"
+import { getRecentActivities } from "@/lib/api/services/activity-service"
+import { 
+  getShipmentOverview,
+  getProductPerformance, 
+  getWarehouseCapacity,
+  getActiveRoutes,
+  getDeliverySchedule,
+  getShipmentAnalytics,
+  getInventoryAnalytics,
+  getRegionalDistribution,
+  getTransportationMethods,
+  getMonthlyReports
+} from "@/lib/api/services/analytics-service"
+import type { Activity } from "@/lib/api/services/activity-service"
+import type { 
+  ShipmentOverview,
+  ProductPerformance,
+  WarehouseCapacity,
+  RouteInfo,
+  DeliverySchedule,
+  ShipmentAnalytics,
+  InventoryAnalytics,
+  RegionalDistribution,
+  TransportationMethod,
+  MonthlyReport
+} from "@/lib/api/services/analytics-service"
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [activities, setActivities] = useState(getRecentActivities(7))
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Chart data states
+  const [shipmentOverviewData, setShipmentOverviewData] = useState<ShipmentOverview[]>([])
+  const [productPerformanceData, setProductPerformanceData] = useState<ProductPerformance[]>([])
+  const [warehouseCapacityData, setWarehouseCapacityData] = useState<WarehouseCapacity[]>([])
+  const [activeRoutesData, setActiveRoutesData] = useState<RouteInfo[]>([])
+  const [deliveryScheduleData, setDeliveryScheduleData] = useState<DeliverySchedule[]>([])
+  const [shipmentAnalyticsData, setShipmentAnalyticsData] = useState<ShipmentAnalytics[]>([])
+  const [inventoryAnalyticsData, setInventoryAnalyticsData] = useState<InventoryAnalytics[]>([])
+  const [regionalDistributionData, setRegionalDistributionData] = useState<RegionalDistribution[]>([])
+  const [transportationMethodsData, setTransportationMethodsData] = useState<TransportationMethod[]>([])
+  const [monthlyReportsData, setMonthlyReportsData] = useState<MonthlyReport[]>([])
+
+  // Fetch activities data
+  const fetchActivities = async () => {
+    try {
+      const response = await getRecentActivities(7)
+      if (response.success && response.data) {
+        setActivities(response.data)
+      }
+      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching activities:", error)
+      setLoading(false)
+    }
+  }
+  
+  // Fetch chart data based on user role
+  const fetchChartData = async () => {
+    try {
+      // Data for Admin dashboard
+      const shipmentOverview = await getShipmentOverview()
+      if (shipmentOverview.success && shipmentOverview.data) {
+        setShipmentOverviewData(shipmentOverview.data)
+      }
+      
+      // Data for Provider dashboard
+      const productPerformance = await getProductPerformance()
+      if (productPerformance.success && productPerformance.data) {
+        setProductPerformanceData(productPerformance.data)
+      }
+      
+      // Data for Stock dashboard
+      const warehouseCapacity = await getWarehouseCapacity()
+      if (warehouseCapacity.success && warehouseCapacity.data) {
+        setWarehouseCapacityData(warehouseCapacity.data)
+      }
+      
+      // Data for Shipper dashboard
+      const activeRoutes = await getActiveRoutes()
+      if (activeRoutes.success && activeRoutes.data) {
+        setActiveRoutesData(activeRoutes.data)
+      }
+      
+      // Data for Receiver dashboard
+      const deliverySchedule = await getDeliverySchedule()
+      if (deliverySchedule.success && deliverySchedule.data) {
+        setDeliveryScheduleData(deliverySchedule.data)
+      }
+      
+      // Data for Analytics tab
+      const shipmentAnalytics = await getShipmentAnalytics()
+      if (shipmentAnalytics.success && shipmentAnalytics.data) {
+        setShipmentAnalyticsData(shipmentAnalytics.data)
+      }
+      
+      const inventoryAnalytics = await getInventoryAnalytics()
+      if (inventoryAnalytics.success && inventoryAnalytics.data) {
+        setInventoryAnalyticsData(inventoryAnalytics.data)
+      }
+      
+      const regionalDistribution = await getRegionalDistribution()
+      if (regionalDistribution.success && regionalDistribution.data) {
+        setRegionalDistributionData(regionalDistribution.data)
+      }
+      
+      const transportationMethods = await getTransportationMethods()
+      if (transportationMethods.success && transportationMethods.data) {
+        setTransportationMethodsData(transportationMethods.data)
+      }
+      
+      // Data for Reports tab
+      const monthlyReports = await getMonthlyReports()
+      if (monthlyReports.success && monthlyReports.data) {
+        setMonthlyReportsData(monthlyReports.data)
+      }
+    } catch (error) {
+      console.error("Error fetching chart data:", error)
+    }
+  }
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchActivities();
+    fetchChartData();
+  }, [])
 
   // Refresh activities periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      setActivities(getRecentActivities(7))
+      fetchActivities();
     }, 60000) // Refresh every minute
 
-    return () => clearInterval(interval)
+    return () => clearInterval(interval);
   }, [])
 
   // Format timestamp to relative time
@@ -92,8 +231,22 @@ export default function DashboardPage() {
                   <CardDescription>Shipment volume and status over time</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <div className="h-[300px] w-full bg-muted/20 flex items-center justify-center">
-                    <p className="text-muted-foreground">Shipment chart will be displayed here</p>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={shipmentOverviewData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="delivered" fill="#10B981" name="Delivered" />
+                        <Bar dataKey="inTransit" fill="#3B82F6" name="In Transit" />
+                        <Bar dataKey="pending" fill="#F59E0B" name="Pending" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -178,8 +331,23 @@ export default function DashboardPage() {
                   <CardDescription>Sales and inventory levels by product</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <div className="h-[300px] w-full bg-muted/20 flex items-center justify-center">
-                    <p className="text-muted-foreground">Product performance chart will be displayed here</p>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        layout="vertical"
+                        data={productPerformanceData}
+                        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis type="category" dataKey="name" />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="sales" fill="#3B82F6" name="Sales" />
+                        <Bar dataKey="inventory" fill="#10B981" name="Inventory" />
+                        <Bar dataKey="target" fill="#F59E0B" name="Target" stackId="a" fillOpacity={0.3} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -264,8 +432,22 @@ export default function DashboardPage() {
                   <CardDescription>Current utilization by warehouse</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <div className="h-[300px] w-full bg-muted/20 flex items-center justify-center">
-                    <p className="text-muted-foreground">Warehouse capacity chart will be displayed here</p>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={warehouseCapacityData}
+                        layout="vertical" 
+                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis type="category" dataKey="name" />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="used" fill="#3B82F6" name="Used Space" stackId="a" />
+                        <Bar dataKey="available" fill="#D1D5DB" name="Available Space" stackId="a" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -352,8 +534,39 @@ export default function DashboardPage() {
                   <CardDescription>Current shipment routes and status</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <div className="h-[300px] w-full bg-muted/20 flex items-center justify-center">
-                    <p className="text-muted-foreground">Route map will be displayed here</p>
+                  <div className="h-[300px] w-full">
+                    <div className="grid grid-cols-1 gap-4 h-full">
+                      {activeRoutesData.map((route) => (
+                        <div key={route.id} className="flex items-center bg-muted/20 rounded-md p-3 relative overflow-hidden">
+                          <div 
+                            className="absolute left-0 top-0 bottom-0 bg-blue-500/20" 
+                            style={{ width: `${route.progress}%` }}
+                          />
+                          <div className="z-10 flex-1 grid grid-cols-5 w-full">
+                            <div className="col-span-2">
+                              <div className="font-medium">{route.origin.name}</div>
+                              <div className="text-xs text-muted-foreground">Origin</div>
+                            </div>
+                            <div className="col-span-1 flex items-center justify-center">
+                              <div className="w-full h-1 bg-gray-200 relative">
+                                <div 
+                                  className="absolute top-0 left-0 h-1 bg-blue-500"
+                                  style={{ width: `${route.progress}%` }} 
+                                />
+                              </div>
+                            </div>
+                            <div className="col-span-2">
+                              <div className="font-medium">{route.destination.name}</div>
+                              <div className="text-xs text-muted-foreground">Destination</div>
+                            </div>
+                          </div>
+                          <div className="z-10 flex flex-col items-end min-w-[100px]">
+                            <div className="text-sm font-medium">{route.status}</div>
+                            <div className="text-xs text-muted-foreground">ETA: {route.eta}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -440,8 +653,21 @@ export default function DashboardPage() {
                   <CardDescription>Upcoming deliveries by time</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <div className="h-[300px] w-full bg-muted/20 flex items-center justify-center">
-                    <p className="text-muted-foreground">Delivery schedule chart will be displayed here</p>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={deliveryScheduleData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="time" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="onTime" name="On Time" fill="#10B981" />
+                        <Bar dataKey="delayed" name="Delayed" fill="#EF4444" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -499,25 +725,144 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics</CardTitle>
-                <CardDescription>Detailed analytics and performance metrics</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[400px] flex items-center justify-center">
-                <p className="text-muted-foreground">Analytics data will be displayed here</p>
-              </CardContent>
-            </Card>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shipment Trends</CardTitle>
+                  <CardDescription>Daily shipment performance over the last month</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[350px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={shipmentAnalyticsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" tickFormatter={(value) => value.split('-').slice(1).join('-')} />
+                      <YAxis />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="count" stroke="#3B82F6" fillOpacity={1} fill="url(#colorCount)" />
+                      <Area type="monotone" dataKey="onTime" stroke="#10B981" fillOpacity={0.5} fill="#10B98133" />
+                      <Area type="monotone" dataKey="delayed" stroke="#EF4444" fillOpacity={0.5} fill="#EF444433" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inventory Movement</CardTitle>
+                  <CardDescription>Daily inventory changes with inflows and outflows</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[350px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={inventoryAnalyticsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" tickFormatter={(value) => value.split('-').slice(1).join('-')} />
+                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip />
+                      <Legend />
+                      <Line yAxisId="left" type="monotone" dataKey="total" stroke="#3B82F6" name="Total Inventory" />
+                      <Line yAxisId="right" type="monotone" dataKey="in" stroke="#10B981" name="Items In" />
+                      <Line yAxisId="right" type="monotone" dataKey="out" stroke="#EF4444" name="Items Out" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Regional Distribution</CardTitle>
+                  <CardDescription>Shipment distribution by region</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={regionalDistributionData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {regionalDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `${value}%`} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transportation Methods</CardTitle>
+                  <CardDescription>Shipment distribution by transport type</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={transportationMethodsData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {transportationMethodsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={['#3B82F6', '#10B981', '#F59E0B', '#EF4444'][index % 4]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `${value}%`} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Reports</CardTitle>
-                <CardDescription>Generate and view logistics reports</CardDescription>
+                <CardTitle>Monthly Performance Report</CardTitle>
+                <CardDescription>Key metrics by month</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px] flex items-center justify-center">
-                <p className="text-muted-foreground">Reports will be displayed here</p>
+              <CardContent className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={monthlyReportsData}
+                    margin={{ top: 20, right: 30, left: 30, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip formatter={(value) => value.toLocaleString()} />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="shipments" name="Shipments" fill="#3B82F6" />
+                    <Bar yAxisId="right" dataKey="revenue" name="Revenue ($)" fill="#10B981" />
+                    <Bar yAxisId="right" dataKey="expenses" name="Expenses ($)" fill="#F59E0B" />
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </TabsContent>

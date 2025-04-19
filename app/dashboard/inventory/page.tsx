@@ -1,20 +1,38 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { products, type Product } from "@/lib/mock-data"
 import { Search, Filter, Download, Plus } from "lucide-react"
+import { getAllProducts, type Product } from "@/lib/api/services/product-service"
 
 export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
+  const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch products data
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getAllProducts()
+        if (response.success && response.data) {
+          setProducts(response.data)
+          setFilteredProducts(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching products:", error)
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
 
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

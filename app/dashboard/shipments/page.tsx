@@ -1,22 +1,40 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { shipments, type Shipment } from "@/lib/mock-data"
 import { Search, Download, Plus, ArrowUpDown } from "lucide-react"
+import { getAllShipments, type Shipment } from "@/lib/api/services/shipment-service"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function ShipmentsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [filteredShipments, setFilteredShipments] = useState<Shipment[]>(shipments)
+  const [shipments, setShipments] = useState<Shipment[]>([])
+  const [filteredShipments, setFilteredShipments] = useState<Shipment[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch shipments data
+  useEffect(() => {
+    const fetchShipments = async () => {
+      try {
+        const response = await getAllShipments()
+        if (response.success && response.data) {
+          setShipments(response.data)
+          setFilteredShipments(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching shipments:", error)
+        setLoading(false)
+      }
+    }
+    fetchShipments()
+  }, [])
 
   // Handle search and filter
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

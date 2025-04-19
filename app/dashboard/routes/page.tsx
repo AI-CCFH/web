@@ -1,38 +1,58 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { shipments, type Shipment } from "@/lib/mock-data"
 import { Search, Filter, Download, Plus, MapPin } from "lucide-react"
+import { getAllShipments, type Shipment } from "@/lib/api/services/shipment-service"
 import { MapPicker } from "@/components/map-picker"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function RoutesPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [filteredShipments, setFilteredShipments] = useState<Shipment[]>(
-    shipments.filter((s) => s.status === "In Transit" || s.status === "Pending"),
-  )
+  const [shipments, setShipments] = useState<Shipment[]>([])
+  const [filteredShipments, setFilteredShipments] = useState<Shipment[]>([])
+  const [loading, setLoading] = useState(true)
   const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.006 }) // NYC default
+
+  // Fetch shipments data
+  useEffect(() => {
+    const fetchShipments = async () => {
+      try {
+        const response = await getAllShipments()
+        if (response.success && response.data) {
+          setShipments(response.data)
+          // Filter for active shipments (In Transit or Pending)
+          const activeShipments = response.data.filter(
+            (s) => s.status === "In Transit" || s.status === "Pending"
+          )
+          setFilteredShipments(activeShipments)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching shipments:", error)
+        setLoading(false)
+      }
+    }
+    fetchShipments()
+  }, [])
 
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase()
     setSearchTerm(term)
 
-    const baseShipments = shipments.filter((s) => s.status === "In Transit" || s.status === "Pending")
+    const baseShipments = shipments.filter((s: Shipment) => s.status === "In Transit" || s.status === "Pending")
 
     if (term === "") {
       setFilteredShipments(baseShipments)
     } else {
       const filtered = baseShipments.filter(
-        (shipment) =>
+        (shipment: Shipment) =>
           shipment.trackingNumber.toLowerCase().includes(term) ||
           shipment.origin.toLowerCase().includes(term) ||
           shipment.destination.toLowerCase().includes(term) ||

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
   ArrowRight, Package2, Shield, Truck, Warehouse, User, BarChart3, 
-  CheckCircle, QrCode, RefreshCw
+  CheckCircle, QrCode, RefreshCw,
+  ArrowUp
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -167,7 +168,7 @@ export default function Home() {
                             <h4 className="font-medium text-sm mb-2">Shipments Today</h4>
                             <div className="text-2xl font-bold">24</div>
                             <div className="text-xs text-green-500 flex items-center">
-                              <ArrowRight className="h-3 w-3 rotate-45" />
+                              <ArrowUp className="h-3 w-3 rotate-45" />
                               <span>+8% from yesterday</span>
                             </div>
                           </div>

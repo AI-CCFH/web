@@ -85,7 +85,7 @@ export default function Home() {
         <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
           <div className="container px-4 md:px-6">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
-              <h2 className="text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
+              <h2 className="text-3xl font-bold leading-tight tracking-tighter sm:text-4xl md:text-5xl">
                 Features Designed for Every Role
               </h2>
               <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">

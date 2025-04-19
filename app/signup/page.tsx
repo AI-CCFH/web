@@ -91,11 +91,11 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateStep(step)) {
-      // Here you would typically send the data to your backend
+      // Here we would typically send the data to our backend
       console.log("Form submitted:", formData)
 
       // For now, we'll just simulate a successful signup
-      // In a real app, you would handle the API response
+      // In a real app, we would handle the API response
       setTimeout(() => {
         router.push("/login")
       }, 2000)

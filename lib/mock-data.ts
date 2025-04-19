@@ -5,12 +5,15 @@ export interface Product {
   id: string
   name: string
   sku: string
+  productType?: string
   quantity: number
   weight: number // kg per unit
   provider: string
   location: string
   status: string
   lastUpdated: string
+  importDate?: string
+  expiryDate?: string
 }
 
 export interface Shipment {
@@ -52,12 +55,15 @@ export const products: Product[] = [
     id: "prod-1",
     name: "Premium Laptop",
     sku: "TECH-001",
+    productType: "Electronics",
     quantity: 120,
     weight: 2.5,
     provider: "Global Supplies Inc.",
     location: "Central Warehouse",
     status: "In Stock",
-    lastUpdated: "2023-04-17T14:30:00Z",
+    lastUpdated: "2025-04-17T14:30:00Z",
+    importDate: "2025-03-15T09:00:00Z",
+    expiryDate: "2026-03-15T09:00:00Z",
   },
   {
     id: "prod-2",
@@ -68,7 +74,7 @@ export const products: Product[] = [
     provider: "Global Supplies Inc.",
     location: "Central Warehouse",
     status: "In Stock",
-    lastUpdated: "2023-04-17T15:45:00Z",
+    lastUpdated: "2025-04-17T15:45:00Z",
   },
   {
     id: "prod-3",
@@ -79,7 +85,7 @@ export const products: Product[] = [
     provider: "Global Supplies Inc.",
     location: "East Warehouse",
     status: "Low Stock",
-    lastUpdated: "2023-04-16T11:20:00Z",
+    lastUpdated: "2025-04-16T11:20:00Z",
   },
   {
     id: "prod-4",
@@ -90,7 +96,7 @@ export const products: Product[] = [
     provider: "Tech Innovations LLC",
     location: "Central Warehouse",
     status: "In Stock",
-    lastUpdated: "2023-04-18T09:10:00Z",
+    lastUpdated: "2025-04-18T09:10:00Z",
   },
   {
     id: "prod-5",
@@ -101,7 +107,7 @@ export const products: Product[] = [
     provider: "Tech Innovations LLC",
     location: "West Warehouse",
     status: "In Stock",
-    lastUpdated: "2023-04-17T16:30:00Z",
+    lastUpdated: "2025-04-17T16:30:00Z",
   },
 ]
 
@@ -116,8 +122,8 @@ export const shipments: Shipment[] = [
     items: 45,
     totalWeight: 120,
     shipper: "Fast Freight Logistics",
-    departureDate: "2023-04-16T08:00:00Z",
-    estimatedArrival: "2023-04-19T14:00:00Z",
+    departureDate: "2025-04-16T08:00:00Z",
+    estimatedArrival: "2025-04-19T14:00:00Z",
     urgency: "medium",
   },
   {
@@ -129,9 +135,9 @@ export const shipments: Shipment[] = [
     items: 32,
     totalWeight: 85,
     shipper: "Fast Freight Logistics",
-    departureDate: "2023-04-15T09:30:00Z",
-    estimatedArrival: "2023-04-17T11:00:00Z",
-    actualArrival: "2023-04-17T10:45:00Z",
+    departureDate: "2025-04-15T09:30:00Z",
+    estimatedArrival: "2025-04-17T11:00:00Z",
+    actualArrival: "2025-04-17T10:45:00Z",
     urgency: "low",
   },
   {
@@ -143,7 +149,7 @@ export const shipments: Shipment[] = [
     items: 120,
     totalWeight: 350,
     shipper: "Express Shipping Co.",
-    estimatedArrival: "2023-04-22T16:00:00Z",
+    estimatedArrival: "2025-04-22T16:00:00Z",
     urgency: "high",
   },
   {
@@ -166,8 +172,8 @@ export const shipments: Shipment[] = [
     items: 25,
     totalWeight: 60,
     shipper: "Express Shipping Co.",
-    departureDate: "2023-04-18T07:15:00Z",
-    estimatedArrival: "2023-04-19T09:00:00Z",
+    departureDate: "2025-04-18T07:15:00Z",
+    estimatedArrival: "2025-04-19T09:00:00Z",
     urgency: "critical",
   },
 ]
@@ -223,7 +229,7 @@ export const activities: Activity[] = [
     action: "Shipment Created",
     description: "New shipment SHP-10049 created",
     user: "Taylor Rodriguez",
-    timestamp: "2023-04-18T07:10:00Z",
+    timestamp: "2025-04-18T07:10:00Z",
     relatedId: "ship-5",
   },
   {
@@ -231,7 +237,7 @@ export const activities: Activity[] = [
     action: "Inventory Updated",
     description: "Bluetooth Speaker stock updated to 210 units",
     user: "Jamie Chen",
-    timestamp: "2023-04-17T16:30:00Z",
+    timestamp: "2025-04-17T16:30:00Z",
     relatedId: "prod-5",
   },
   {
@@ -239,7 +245,7 @@ export const activities: Activity[] = [
     action: "Shipment Delivered",
     description: "Shipment SHP-10046 delivered to South Retail Hub",
     user: "Morgan Smith",
-    timestamp: "2023-04-17T10:45:00Z",
+    timestamp: "2025-04-17T10:45:00Z",
     relatedId: "ship-2",
   },
   {
@@ -247,7 +253,7 @@ export const activities: Activity[] = [
     action: "New Product Added",
     description: "Tablet added to inventory with 95 units",
     user: "Sam Williams",
-    timestamp: "2023-04-18T09:10:00Z",
+    timestamp: "2025-04-18T09:10:00Z",
     relatedId: "prod-4",
   },
   {
@@ -255,7 +261,7 @@ export const activities: Activity[] = [
     action: "Shipment In Transit",
     description: "Shipment SHP-10045 is now in transit",
     user: "Taylor Rodriguez",
-    timestamp: "2023-04-16T08:15:00Z",
+    timestamp: "2025-04-16T08:15:00Z",
     relatedId: "ship-1",
   },
   {
@@ -263,14 +269,14 @@ export const activities: Activity[] = [
     action: "User Login",
     description: "Admin user logged in",
     user: "Alex Johnson",
-    timestamp: "2023-04-18T10:30:00Z",
+    timestamp: "2025-04-18T10:30:00Z",
   },
   {
     id: "act-7",
     action: "Warehouse Capacity Updated",
     description: "West Warehouse capacity updated to 12000 units",
     user: "Alex Johnson",
-    timestamp: "2023-04-16T14:20:00Z",
+    timestamp: "2025-04-16T14:20:00Z",
     relatedId: "wh-3",
   },
 ]

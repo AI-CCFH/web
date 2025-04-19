@@ -17,11 +17,14 @@ interface StockFormData {
   name: string
   quantity: string
   kg_per_quantity: string
-  current_location: string
-  from_location: string
-  to_location: string
+  location: string
   urgency: string
   notes?: string
+}
+
+// Define a stock item structure that will be stored
+interface StockItem extends StockFormData {
+  id: string
 }
 
 // Define the initial form state
@@ -29,9 +32,7 @@ const initialFormState: StockFormData = {
   name: "",
   quantity: "",
   kg_per_quantity: "",
-  current_location: "",
-  from_location: "",
-  to_location: "",
+  location: "",
   urgency: "medium",
   notes: "",
 }
@@ -39,23 +40,32 @@ const initialFormState: StockFormData = {
 export default function StockFormPage() {
   const [formData, setFormData] = useState<StockFormData>(initialFormState)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [stockItems, setStockItems] = useState<StockItem[]>([])
 
-  // Load saved form data from localStorage on component mount
+  // Load saved data from localStorage on component mount
   useEffect(() => {
-    const savedData = localStorage.getItem("stockFormData")
-    if (savedData) {
+    const savedFormData = localStorage.getItem("stockFormData")
+    if (savedFormData) {
       try {
-        const parsedData = JSON.parse(savedData) as StockFormData
-        // Only load persistent fields, not the ones that should be reset
+        const parsedData = JSON.parse(savedFormData) as Partial<StockFormData>
+        // Only load persistent fields
         setFormData((prevData) => ({
           ...prevData,
-          current_location: parsedData.current_location || "",
-          from_location: parsedData.from_location || "",
-          to_location: parsedData.to_location || "",
+          location: parsedData.location || "",
           urgency: parsedData.urgency || "medium",
         }))
       } catch (error) {
         console.error("Error parsing saved form data:", error)
+      }
+    }
+
+    const savedItems = localStorage.getItem("stockItems")
+    if (savedItems) {
+      try {
+        const parsedItems = JSON.parse(savedItems) as StockItem[]
+        setStockItems(parsedItems)
+      } catch (error) {
+        console.error("Error parsing saved stock items:", error)
       }
     }
   }, [])
@@ -87,24 +97,30 @@ export default function StockFormPage() {
       return
     }
 
-    // Convert form data to JSON
-    const jsonData = JSON.stringify(formData)
-    console.log("Form submitted:", jsonData)
-
     // Save persistent fields to localStorage
     const persistentData = {
-      current_location: formData.current_location,
-      from_location: formData.from_location,
-      to_location: formData.to_location,
+      location: formData.location,
       urgency: formData.urgency,
     }
     localStorage.setItem("stockFormData", JSON.stringify(persistentData))
+
+    // Add item to stock list
+    const newItem: StockItem = {
+      ...formData,
+      id: Date.now().toString(), // Generate a simple unique ID
+    }
+    
+    const updatedItems = [...stockItems, newItem]
+    setStockItems(updatedItems)
+    
+    // Save items to localStorage
+    localStorage.setItem("stockItems", JSON.stringify(updatedItems))
 
     // Simulate API call
     setTimeout(() => {
       toast({
         title: "Success",
-        description: "Stock information has been submitted",
+        description: "Stock information has been added",
       })
 
       // Reset non-persistent fields
@@ -120,8 +136,30 @@ export default function StockFormPage() {
     }, 1000)
   }
 
+  const handleDeleteItem = (id: string) => {
+    const updatedItems = stockItems.filter(item => item.id !== id)
+    setStockItems(updatedItems)
+    localStorage.setItem("stockItems", JSON.stringify(updatedItems))
+    
+    toast({
+      title: "Item Deleted",
+      description: "Stock item has been removed",
+    })
+  }
+
+  const handleMarkAsDone = (id: string) => {
+    const updatedItems = stockItems.filter(item => item.id !== id)
+    setStockItems(updatedItems)
+    localStorage.setItem("stockItems", JSON.stringify(updatedItems))
+    
+    toast({
+      title: "Task Complete",
+      description: "Stock item has been marked as done",
+    })
+  }
+
   return (
-    <DashboardLayout userRole={2}>
+    <DashboardLayout>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Stock Management Form</h1>
         <p className="text-muted-foreground">Use this form to add or update stock information.</p>
@@ -134,69 +172,91 @@ export default function StockFormPage() {
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Item Name *</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter item name"
-                required
-              />
-            </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Item Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter item name"
+                      required
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                name="quantity"
-                type="number"
-                value={formData.quantity}
-                onChange={handleChange}
-                placeholder="Enter quantity"
-                required
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      value={formData.quantity}
+                      onChange={handleChange}
+                      placeholder="Enter quantity"
+                      required
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="kg_per_quantity">Weight per Unit (kg) *</Label>
-              <Input
-                id="kg_per_quantity"
-                name="kg_per_quantity"
-                type="number"
-                step="0.01"
-                value={formData.kg_per_quantity}
-                onChange={handleChange}
-                placeholder="Enter weight per unit"
-                required
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="kg_per_quantity">Weight per Unit (kg) *</Label>
+                    <Input
+                      id="kg_per_quantity"
+                      name="kg_per_quantity"
+                      type="number"
+                      step="0.01"
+                      value={formData.kg_per_quantity}
+                      onChange={handleChange}
+                      placeholder="Enter weight per unit"
+                      required
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="urgency">Urgency Level</Label>
-              <Select value={formData.urgency} onValueChange={(value) => handleSelectChange("urgency", value)}>
-                <SelectTrigger id="urgency">
-            <SelectValue placeholder="Select urgency level" />
-                </SelectTrigger>
-                <SelectContent>
-            <SelectItem value="low">Low</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="Item location"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="urgency">Urgency Level</Label>
+                    <Select value={formData.urgency} onValueChange={(value) => handleSelectChange("urgency", value)}>
+                      <SelectTrigger id="urgency">
+                        <SelectValue placeholder="Select urgency level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      name="notes"
+                      value={formData.notes || ""}
+                      onChange={handleChange}
+                      placeholder="Additional notes or special instructions"
+                    />
+                  </div>
+                </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={() => setFormData(initialFormState)}>
-            Reset Form
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
+                <Button type="button" variant="outline" onClick={() => setFormData(initialFormState)}>
+                  Reset Form
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit"}
+                </Button>
               </CardFooter>
             </form>
           </Card>
@@ -204,15 +264,15 @@ export default function StockFormPage() {
           <div className="lg:w-1/3">
             <Card className="sticky top-4">
               <CardHeader>
-          <CardTitle>Tips</CardTitle>
-          <CardDescription>Helpful tips for filling out the form</CardDescription>
+                <CardTitle>Tips</CardTitle>
+                <CardDescription>Helpful tips for filling out the form</CardDescription>
               </CardHeader>
               <CardContent>
-          <ul className="list-disc pl-4 space-y-2">
-            <li>Ensure all required fields are filled out.</li>
-            <li>Use accurate measurements for weight and quantity.</li>
-            <li>Select the appropriate urgency level for your stock.</li>
-          </ul>
+                <ul className="list-disc pl-4 space-y-2">
+                  <li>Ensure all required fields are filled out.</li>
+                  <li>Use accurate measurements for weight and quantity.</li>
+                  <li>Select the appropriate urgency level for your stock.</li>
+                </ul>
               </CardContent>
             </Card>
           </div>
@@ -225,38 +285,56 @@ export default function StockFormPage() {
               <CardDescription>Manage your stock items below</CardDescription>
             </CardHeader>
             <CardContent>
-              <table className="table-auto w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">Item Name</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">Quantity</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">Weight (kg)</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">Urgency</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-gray-300 px-4 py-2">{formData.name}</td>
-              <td className="border border-gray-300 px-4 py-2">{formData.quantity || "N/A"}</td>
-              <td className="border border-gray-300 px-4 py-2">{formData.kg_per_quantity || "N/A"}</td>
-              <td className="border border-gray-300 px-4 py-2">{formData.urgency || "N/A"}</td>
-              <td className="border border-gray-300 px-4 py-2">
-                <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Update
-            </Button>
-            <Button variant="destructive" size="sm">
-              Delete
-            </Button>
-            <Button variant="success" size="sm">
-              Mark as Done
-            </Button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-              </table>
+              {stockItems.length === 0 ? (
+                <p className="text-center py-4 text-muted-foreground">No stock items added yet.</p>
+              ) : (
+                <table className="table-auto w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-2 text-left">Item Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Quantity</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Weight (kg)</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Location</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Urgency</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="border border-gray-300 px-4 py-2">{item.name}</td>
+                        <td className="border border-gray-300 px-4 py-2">{item.quantity}</td>
+                        <td className="border border-gray-300 px-4 py-2">{item.kg_per_quantity}</td>
+                        <td className="border border-gray-300 px-4 py-2">{item.location || "N/A"}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {item.urgency === "low" ? "Low" : 
+                          item.urgency === "medium" ? "Medium" : 
+                          item.urgency === "high" ? "High" : 
+                          item.urgency === "critical" ? "Critical" : item.urgency}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={() => handleDeleteItem(item.id)}
+                            >
+                              Delete
+                            </Button>
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => handleMarkAsDone(item.id)}
+                            >
+                              Mark as Done
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -66,18 +66,30 @@ export function MapPicker({ latitude, longitude, onLocationChange, className }: 
     OSM.addTo(map)
     google.addTo(map)
 
-    // Your Location
-    const myIcon = L.icon({
-      iconUrl: "../static/images/adventurer_pin_new.png",
-      iconSize: [50, 50],
-    })
+    // Create custom Leaflet icons using SVG for better visualization
+    // Blue marker for user location
+    const myIcon = L.divIcon({
+      className: 'custom-div-icon',
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#60A5FA" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
+      popupAnchor: [0, -24]
+    });
 
-    // Warehouse Location
-    const Warehouse = L.icon({
-      iconUrl: "../static/images/quest.png",
-      iconSize: [50, 50],
-    })
-    
+    // Yellow marker for warehouse location
+    const Warehouse = L.divIcon({
+      className: 'custom-div-icon',
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#FBBF24" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
+          <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path>
+        </svg>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
+      popupAnchor: [0, -24]
+    });
 
     // Markers
     const myLocation = L.marker([latitude, longitude], { icon: myIcon }).addTo(map)
@@ -95,7 +107,7 @@ export function MapPicker({ latitude, longitude, onLocationChange, className }: 
 
     const overlayMaps = {
       "<span style='color: red; font-size: 16px;'>Location</span>": myLocation,
-      "<span style='color: red; font-size: 16px;'>Ware house</span>": Warehouse_marker ,
+      "<span style='color: red; font-size: 16px;'>Warehouse</span>": Warehouse_marker ,
     }
 
     L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map)

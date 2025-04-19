@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { decryptProductData, QRProductData } from "@/lib/qr-utils"
@@ -9,7 +9,24 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, Calendar, Package2 } from "lucide-react"
 
-export default function ScanProductPage() {
+// Loading component for Suspense fallback
+function ProductScanLoading() {
+  return (
+    <div className="container max-w-md mx-auto py-12">
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            <p className="mt-4 text-sm text-muted-foreground">Loading product data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Main component content that uses useSearchParams
+function ProductScanContent() {
   const searchParams = useSearchParams()
   const [productData, setProductData] = useState<QRProductData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -231,5 +248,14 @@ export default function ScanProductPage() {
         </CardFooter>
       </Card>
     </div>
+  )
+}
+
+// Main page component that wraps content in Suspense
+export default function ScanProductPage() {
+  return (
+    <Suspense fallback={<ProductScanLoading />}>
+      <ProductScanContent />
+    </Suspense>
   )
 }

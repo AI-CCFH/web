@@ -5,12 +5,11 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth"
 
-const inter = Inter({ subsetGlyphs: "latin", display: "swap" })
+const inter = Inter({ subsets: ["latin"], display: "swap" })
 
 export const metadata: Metadata = {
   title: "Logistics Management System",
-  description: "A comprehensive logistics management system for shipping and inventory",
-    generator: 'v0.dev'
+  description: "A comprehensive logistics management system for shipping and inventory"
 }
 
 export default function RootLayout({

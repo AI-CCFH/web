@@ -1,5 +1,6 @@
 {
-  "name": "my-v0-project",
+  "name": "web",
+  "description": "the front facing interface of team ai-ccfh's project",
   "version": "0.1.0",
   "private": true,
   "scripts": {

@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { createContext, useContext, useState, useEffect } from "react"
 import { type User, authenticateUser } from "@/lib/users"
 

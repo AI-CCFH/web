@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Shield,
   User,
+  MapPin,
+  ClipboardList,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -39,26 +41,35 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
-  const [redirectToLogin, setRedirectToLogin] = useState(false)
 
   // Redirect if not logged in
   useEffect(() => {
     if (!user) {
-      setRedirectToLogin(true)
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (redirectToLogin) {
       router.push("/login")
     }
-  }, [redirectToLogin, router])
+  }, [user, router])
 
-  // If no user yet, show nothing (will redirect)
-  if (redirectToLogin) {
-    return null
+  // Set initial refresh time
+  useEffect(() => {
+    setLastRefreshed(new Date())
+  }, [])
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+
+    // Simulate data refresh
+    setTimeout(() => {
+      setIsRefreshing(false)
+      setLastRefreshed(new Date())
+    }, 1500)
   }
 
+  const handleLogout = () => {
+    logout()
+    router.push("/login")
+  }
+
+  // If no user yet, show nothing (will redirect)
   if (!user) {
     return null
   }
@@ -70,6 +81,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const icons = [Shield, User, Warehouse, Truck, Package2]
     const Icon = icons[roleId] || User
     return <Icon className="h-6 w-6" />
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return "U"
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
   }
 
   // Navigation items based on user role
@@ -125,6 +147,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           href: "/dashboard/orders",
           icon: Package2,
         },
+        {
+          title: "Address Form",
+          href: "/dashboard/address-form",
+          icon: MapPin,
+        },
+        {
+          title: "Stock Form",
+          href: "/dashboard/stock-form",
+          icon: ClipboardList,
+        },
       ],
       2: [
         // Stock
@@ -134,9 +166,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           icon: Warehouse,
         },
         {
+          title: "Address Form",
+          href: "/dashboard/address-form",
+          icon: MapPin,
+        },
+        {
           title: "Stock Form",
           href: "/dashboard/stock-form",
-          icon: Package2,
+          icon: ClipboardList,
         },
       ],
       3: [
@@ -160,6 +197,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           icon: Package2,
         },
         {
+          title: "Address Form",
+          href: "/dashboard/address-form",
+          icon: MapPin,
+        },
+        {
           title: "History",
           href: "/dashboard/history",
           icon: Package2,
@@ -171,37 +213,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const navItems = getNavItems(userRole)
-
-  const handleRefresh = () => {
-    setIsRefreshing(true)
-
-    // Simulate data refresh
-    setTimeout(() => {
-      setIsRefreshing(false)
-      setLastRefreshed(new Date())
-    }, 1500)
-  }
-
-  const handleLogout = () => {
-    logout()
-    router.push("/login")
-  }
-
-  useEffect(() => {
-    // Set initial refresh time
-    setLastRefreshed(new Date())
-  }, [])
-
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!user?.name) return "U"
-    return user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
-  }
 
   return (
     <div className="flex min-h-screen flex-col">

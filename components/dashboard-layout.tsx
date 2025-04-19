@@ -116,15 +116,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       1: [
         // Provider
         {
-          title: "Products",
-          href: "/dashboard/products",
+          title: " provier form",
+          href: "/dashboard/provider-form",
           icon: Package2,
-        },
-        {
-          title: "Orders",
-          href: "/dashboard/orders",
-          icon: Package2,
-        },
+        }
       ],
       2: [
         // Stock
